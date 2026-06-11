@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fause Haten</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+
+    @font-face
+    {
+    font-family: 'Helvetica Neue';
+    src: url('HelveticaNeue.ttf'),
+      url('HelveticaNeue.eot'); /* IE9 */
+    }
+
+    --violet: #8B5CF6;
+    --violet-light: #C4B5FD;
+    --violet-pale: #EDE9FE;
+    --violet-dark: #5B21B6;
+    --ink: #1a1a1a;
+    --paper: #ffffff;
+  }
+
+  body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1.5px solid var(--violet-light);
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+  }
+
+  header a {
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 42% 1fr;
+    min-height: calc(100vh - 74px);
+  }
+
+  .left-panel {
+    display: flex;
+    flex-direction: column;
+    padding: 18px 18px 0 18px;
+    border-right: 1.5px solid var(--violet-light);
+  }
+
+  .bio {
+    font-size: 12px;
+    line-height: 1.7;
+    color: var(--violet-dark);
+    margin-bottom: 18px;
+  }
+
+  .bio p + p { margin-top: 10px; }
+
+  .next-link {
+    font-size: 11px;
+    color: var(--violet);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    display: block;
+    text-align: right;
+    padding-right: 4px;
+    margin-bottom: 10px;
+  }
+
+  .next-link:hover { text-decoration: underline; }
+
+  .portrait-wrap {
+    flex: 1;
+    display: flex;
+    align-items: flex-end;
+    overflow: hidden;
+    margin: 0 -18px;
+  }
+
+  .portrait-pixelate {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, var(--violet) 1px, transparent 1px);
+    background-size: 5px 5px;
+    opacity: 0.18;
+    mix-blend-mode: multiply;
+  }
+
+  .portrait-label {
+    position: absolute;
+    bottom: 12px;
+    left: 14px;
+    font-size: 9px;
+    color: var(--violet);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    z-index: 1;
+  }
+
+  .tags {
+    padding: 10px 18px;
+    border-right: 1.5px solid var(--violet-light);
+    font-size: 10px;
+    color: var(--violet);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-top: 1px solid var(--violet-pale);
+  }
+
+  .tags span { font-size: 14px; color: var(--violet-dark); }
+
+  .right-panel {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    height: calc(100vh - 74px);
+  }
+
+  .thumbs-col {
+    border-right: 1.5px solid var(--violet-light);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .thumb {
+    width: 72px;
+    height: 68px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    border-right: none;
+    overflow: hidden;
+    position: relative;
+    transition: border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .thumb:hover, .thumb.active {
+    border-color: var(--violet);
+    background: var(--violet-pale);
+  }
+
+  .thumb canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .thumb-inner {
+    width: 100%;
+    height: 100%;
+    background: var(--violet-pale);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .thumb-inner::before {
+    content: attr(data-label);
+    font-size: 8px;
+    color: var(--violet);
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    letter-spacing: 0.05em;
+    z-index: 1;
+    position: relative;
+    white-space: pre;
+  }
+
+  .thumb-inner::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.15;
+  }
+
+  .thumb-inner.t1::after { background: linear-gradient(135deg, var(--violet) 0%, transparent 60%); }
+  .thumb-inner.t2::after { background: radial-gradient(ellipse at center, #e11d48 0%, transparent 70%); }
+  .thumb-inner.t3::after { background: linear-gradient(180deg, #000 0%, var(--violet) 100%); }
+
+  .thumb-tag {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    font-size: 7px;
+    background: var(--violet);
+    color: white;
+    padding: 1px 4px;
+    letter-spacing: 0.05em;
+    z-index: 2;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+  }
+
+  .thumb.active .thumb-tag {
+    opacity: 1;
+  }
+
+  .viewer-area {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .viewer-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fafafa;
+    padding: 20px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Single image / cover view */
+  .single-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    height: 100%;
+  }
+
+  .main-image-ph {
+    flex: 1;
+    width: 100%;
+    max-width: 380px;
+    background: var(--violet-pale);
+    border: 1.5px solid var(--violet-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .main-image-ph canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .main-image-ph::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, var(--violet-pale) 0%, var(--violet-light) 100%);
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  /* Remove the ::after overlay when a PDF is loaded */
+  .main-image-ph.has-pdf::after { display: none; }
+
+  .image-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 1;
+  }
+
+  .image-label .show-name {
+    font-size: 13px;
+    font-weight: bold;
+    color: var(--violet-dark);
+    letter-spacing: 0.1em;
+    display: block;
+  }
+
+  .image-label .show-year {
+    font-size: 11px;
+    color: var(--violet);
+    letter-spacing: 0.15em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* PDF spread view */
+  .pdf-view {
+    display: none;
+    width: 100%;
+    height: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .pdf-view.open { display: flex; }
+
+  .pdf-spread {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  .pdf-page {
+    background: var(--violet-pale);
+    border: 1.5px solid var(--violet-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .pdf-page canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+  }
+
+  .pdf-page-label {
+    font-size: 10px;
+    color: var(--violet);
+    letter-spacing: 0.1em;
+    z-index: 1;
+    position: relative;
+    text-align: center;
+  }
+
+  /* Loading spinner */
+  .pdf-loading {
+    display: none;
+    position: absolute;
+    inset: 0;
+    align-items: center;
+    justify-content: center;
+    background: rgba(237,233,254,0.7);
+    font-size: 10px;
+    color: var(--violet);
+    letter-spacing: 0.1em;
+    z-index: 10;
+  }
+
+  .pdf-loading.visible { display: flex; }
+
+  /* PDF controls bar */
+  .pdf-controls {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-top: 1.5px solid var(--violet-light);
+    background: var(--paper);
+    font-size: 11px;
+    color: var(--violet);
+  }
+
+  .pdf-controls.visible { display: flex; }
+
+  .pdf-controls .ctrl-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--violet);
+    font-size: 14px;
+    padding: 2px 5px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .ctrl-btn:hover { color: var(--violet-dark); }
+  .ctrl-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .page-nav-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--violet);
+    font-size: 13px;
+    padding: 0 6px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .page-nav-btn:hover { color: var(--violet-dark); }
+  .page-nav-btn:disabled { opacity: 0.3; cursor: default; }
+
+  .page-indicator { letter-spacing: 0.05em; }
+
+  .expand-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--violet);
+    font-size: 14px;
+    padding: 2px 5px;
+  }
+
+  .viewer-header {
+    padding: 10px 14px 0;
+    font-size: 11px;
+    color: var(--violet-dark);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .view-toggle {
+    font-size: 10px;
+    color: var(--violet);
+    cursor: pointer;
+    background: none;
+    border: 1px solid var(--violet-light);
+    padding: 2px 8px;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .view-toggle:hover { background: var(--violet-pale); }
+
+  @media (max-width: 700px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .right-panel { grid-template-columns: 60px 1fr; height: auto; min-height: 60vh; }
+    .left-panel { border-right: none; border-bottom: 1.5px solid var(--violet-light); }
+    .portrait-wrap { max-height: 340px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="../../index.html" title="Página inicial">
+    <img src="../../LogoBarky.png">
+  </a>
+</header>
+
+<div class="main-grid">
+
+  <div style="display:flex; flex-direction:column;">
+    <div class="left-panel">
+      <div class="bio">
+        <p>Fause Haten é um estilista, figurinista, performer e ator teatral brasileiro. Participa das semanas de moda desde a segunda edição do Phytoervas Fashion, em 1994. Ao todo participou de X edições no evento.</p>
+        <p>Fause Haten is a brazilian fashion designer, performer and actor. Since 1994, he's presented collections on fashion weeks. He's been in X editions.</p>
+      </div>
+      <a href="#" class="next-link">Próximo &gt;</a>
+      <div class="portrait-wrap">
+        <img src="FauseHatenFaceBarky.png">
+      </div>
+    </div>
+    <div class="tags">
+      <span style="font-size:xx-large ">+</span>
+      tagged: ; <strong><a href="#">fause haten</a></strong>
+    </div>
+  </div>
+
+  <div class="right-panel">
+
+    <div class="thumbs-col" id="thumbs-col">
+      <div class="thumb active" data-key="desfile" onclick="selectThumb(this)" title="Polaroid Cristiano Madureira 1994">
+        <div class="thumb-inner t1"><img src="FauseHaten1.png"></div>
+        <div class="thumb-tag">POLAROID 1994</div>
+      </div>
+      <div class="thumb" data-key="editorial" onclick="selectThumb(this)" title="Verão Carnaval 2000">
+        <div class="thumb-inner t2"><img src="FauseHaten2.png"></div>
+        <div class="thumb-tag">VERÃO CARNAVAL 2000</div>
+      </div>
+      <div class="thumb" data-key="campanha" onclick="selectThumb(this)" title="Campanha 1993">
+        <div class="thumb-inner t3"><img src="FauseHaten3.png"></div>
+        <div class="thumb-tag">CAMPANHA 1993</div>
+      </div>
+    </div>
+
+    <div class="viewer-area">
+      <div class="viewer-header">
+        <span id="viewer-title">POLAROID — C. Madureira 1994</span>
+        <button class="view-toggle" onclick="togglePDF()" id="toggle-btn">Ver PDF &rsaquo;</button>
+      </div>
+
+      <div class="viewer-content">
+        <div class="pdf-loading" id="pdf-loading">carregando...</div>
+
+        <!-- Single / cover view -->
+        <div class="single-view" id="single-view">
+          <div class="main-image-ph" id="cover-ph">
+            <div class="image-label" id="cover-label">
+              <span class="show-name" id="show-name">POLAROID</span>
+              <span class="show-year" id="show-year">C. Madureira 1994</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PDF spread view -->
+        <div class="pdf-view" id="pdf-view">
+          <div class="pdf-spread">
+            <div class="pdf-page" id="page-left">
+              <span class="pdf-page-label" id="label-left">—</span>
+            </div>
+            <div class="pdf-page" id="page-right">
+              <span class="pdf-page-label" id="label-right">—</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdf-controls" id="pdf-controls">
+        <div class="ctrl-group">
+          <button class="ctrl-btn" id="btn-zoom-in"  title="Zoom in"  onclick="adjustZoom(0.2)">⊕</button>
+          <button class="ctrl-btn" id="btn-zoom-out" title="Zoom out" onclick="adjustZoom(-0.2)">⊖</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <button class="page-nav-btn" id="btn-prev" onclick="goSpread(-1)">&lt;</button>
+          <span class="page-indicator">P. <span id="cur-page">1-2</span> de <span id="total-pages">?</span></span>
+          <button class="page-nav-btn" id="btn-next" onclick="goSpread(1)">&gt;</button>
+        </div>
+        <button class="expand-btn" title="Expandir">⤢</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // ── PDF.js worker ──────────────────────────────────────────────
+  pdfjsLib.GlobalWorkerOptions.workerSrc =
+    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  // ── Collection data ────────────────────────────────────────────
+  // Replace pdfUrl with real PDF paths/URLs for each collection.
+  // coverPage: which page of the PDF to show as the single-view cover (1-based).
+  const collections = {
+    desfile: {
+      title: 'POLAROID — 1994',
+      name: 'POLAROID',
+      year: '1994',
+      pdfUrl: './pdfs/MadureiraPolaroid-1994.pdf',          // e.g. 'pdfs/desfile_inverno_1994.pdf'
+      coverPage: 1
+    },
+    editorial: {
+      title: 'VERÃO CARNAVAL — 2000',
+      name: 'EDITORIAL',
+      year: '2000',
+      pdfUrl: './pdfs/2000-ver.pdf',          // e.g. 'pdfs/2000-ver.pdf'
+      coverPage: 1
+    },
+    campanha: {
+      title: 'CAMPANHA — 1993',
+      name: 'CAMPANHA',
+      year: '1993',
+      pdfUrl: './pdfs/1993-2.pdf',          // e.g. 'pdfs/campanha_1993.pdf'
+      coverPage: 1
+    }
+  };
+
+  // ── State ──────────────────────────────────────────────────────
+  let currentKey     = 'desfile';
+  let pdfOpen        = false;
+  let pdfDoc         = null;   // loaded PDFDocumentProxy
+  let currentSpread  = 1;      // left page of current spread (always odd)
+  let zoomScale      = 1.0;
+  let loadedKey      = null;   // which collection's PDF is currently loaded
+
+  // ── Helpers ───────────────────────────────────────────────────
+  function showLoading(v) {
+    document.getElementById('pdf-loading').classList.toggle('visible', v);
+  }
+
+  function clearCanvas(container) {
+    const old = container.querySelector('canvas');
+    if (old) old.remove();
+    const lbl = container.querySelector('.pdf-page-label');
+    if (lbl) lbl.style.display = '';
+  }
+
+  async function renderPageInto(pageNum, container, labelEl) {
+    if (!pdfDoc || pageNum < 1 || pageNum > pdfDoc.numPages) {
+      clearCanvas(container);
+      if (labelEl) { labelEl.textContent = '—'; labelEl.style.display = ''; }
+      return;
+    }
+    const page     = await pdfDoc.getPage(pageNum);
+    const viewport = page.getViewport({ scale: zoomScale * 1.5 });
+    const canvas   = document.createElement('canvas');
+    canvas.width   = viewport.width;
+    canvas.height  = viewport.height;
+    canvas.style.width  = '100%';
+    canvas.style.height = '100%';
+    canvas.style.objectFit = 'contain';
+    canvas.style.display = 'block';
+    await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+    clearCanvas(container);
+    if (labelEl) labelEl.style.display = 'none';
+    container.appendChild(canvas);
+  }
+
+  // ── Load PDF for the current collection ───────────────────────
+  async function loadPDF(key) {
+    if (loadedKey === key) return true;  // already loaded
+    const col = collections[key];
+    if (!col.pdfUrl) {
+      pdfDoc    = null;
+      loadedKey = null;
+      return false;
+    }
+    try {
+      showLoading(true);
+      pdfDoc    = await pdfjsLib.getDocument(col.pdfUrl).promise;
+      loadedKey = key;
+      showLoading(false);
+      return true;
+    } catch(e) {
+      console.warn('PDF load error:', e);
+      pdfDoc    = null;
+      loadedKey = null;
+      showLoading(false);
+      return false;
+    }
+  }
+
+  // ── Render cover (single-view) ─────────────────────────────────
+  async function renderCover(key) {
+    const col    = collections[key];
+    const ph     = document.getElementById('cover-ph');
+    const lbl    = document.getElementById('cover-label');
+    const ok     = await loadPDF(key);
+
+    if (ok && pdfDoc) {
+      ph.classList.add('has-pdf');
+      lbl.style.display = 'none';
+      await renderPageInto(col.coverPage, ph, null);
+    } else {
+      ph.classList.remove('has-pdf');
+      clearCanvas(ph);
+      lbl.style.display = '';
+      document.getElementById('show-name').textContent = col.name;
+      document.getElementById('show-year').textContent = col.year;
+    }
+  }
+
+  // ── Render spread (pdf-view) ───────────────────────────────────
+  async function renderSpread(spreadStart) {
+    const total = pdfDoc ? pdfDoc.numPages : 0;
+    currentSpread = Math.max(1, Math.min(spreadStart, total));
+
+    const leftPage  = currentSpread;
+    const rightPage = currentSpread + 1;
+
+    document.getElementById('cur-page').textContent =
+      rightPage <= total ? `${leftPage}-${rightPage}` : `${leftPage}`;
+    document.getElementById('total-pages').textContent = total || '?';
+
+    document.getElementById('btn-prev').disabled = (currentSpread <= 1);
+    document.getElementById('btn-next').disabled = (rightPage > total);
+
+    showLoading(true);
+    await Promise.all([
+      renderPageInto(leftPage,  document.getElementById('page-left'),  document.getElementById('label-left')),
+      renderPageInto(rightPage, document.getElementById('page-right'), document.getElementById('label-right'))
+    ]);
+    showLoading(false);
+  }
+
+  // ── Navigation ────────────────────────────────────────────────
+  function goSpread(dir) {
+    renderSpread(currentSpread + dir * 2);
+  }
+
+  function adjustZoom(delta) {
+    zoomScale = Math.max(0.5, Math.min(3, zoomScale + delta));
+    if (pdfOpen) renderSpread(currentSpread);
+  }
+
+  // ── Select thumb ──────────────────────────────────────────────
+  async function selectThumb(el) {
+    const key = el.dataset.key;
+    if (key === currentKey && !pdfOpen) return;
+
+    document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    currentKey = key;
+
+    const col = collections[key];
+    document.getElementById('viewer-title').textContent = col.title;
+    document.getElementById('show-name').textContent    = col.name;
+    document.getElementById('show-year').textContent    = col.year;
+
+    if (pdfOpen) {
+      // Stay in PDF mode but load new collection's spread
+      currentSpread = 1;
+      const ok = await loadPDF(key);
+      if (ok) {
+        await renderSpread(1);
+      } else {
+        // No PDF for this collection — show placeholder pages
+        clearCanvas(document.getElementById('page-left'));
+        clearCanvas(document.getElementById('page-right'));
+        document.getElementById('label-left').textContent  = 'sem PDF';
+        document.getElementById('label-right').textContent = '—';
+        document.getElementById('label-left').style.display  = '';
+        document.getElementById('label-right').style.display = '';
+        document.getElementById('cur-page').textContent    = '—';
+        document.getElementById('total-pages').textContent = '?';
+      }
+    } else {
+      await renderCover(key);
+    }
+  }
+
+  // ── Toggle PDF view ───────────────────────────────────────────
+  async function togglePDF() {
+    pdfOpen = !pdfOpen;
+
+    const singleView  = document.getElementById('single-view');
+    const pdfView     = document.getElementById('pdf-view');
+    const pdfControls = document.getElementById('pdf-controls');
+    const btn         = document.getElementById('toggle-btn');
+
+    if (pdfOpen) {
+      singleView.style.display = 'none';
+      pdfView.classList.add('open');
+      pdfControls.classList.add('visible');
+      btn.textContent = '← Voltar';
+      currentSpread = 1;
+      const ok = await loadPDF(currentKey);
+      if (ok) {
+        await renderSpread(1);
+      } else {
+        document.getElementById('label-left').textContent  = 'coloque o PDF em\ncollections.' + currentKey + '.pdfUrl';
+        document.getElementById('label-right').textContent = '—';
+        document.getElementById('label-left').style.display  = '';
+        document.getElementById('label-right').style.display = '';
+      }
+    } else {
+      singleView.style.display = 'flex';
+      pdfView.classList.remove('open');
+      pdfControls.classList.remove('visible');
+      btn.textContent = 'Ver PDF ›';
+      await renderCover(currentKey);
+    }
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  (async () => {
+    await renderCover('desfile');
+  })();
+</script>
+</body>
+</html>

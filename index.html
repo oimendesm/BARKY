@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brazilian Arkyvo of Fashion</title>
+<style>
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    
+    @font-face
+    {
+    font-family: 'Helvetica Neue';
+    src: url('HelveticaNeue.ttf'),
+      url('HelveticaNeue.eot'); /* IE9 */
+    }
+
+    --purple: #b06ed6;
+    --purple-splash: #d489fb;
+    --purple-light: #d4a8e8;
+    --purple-nav: #c99de0;
+    --purple-faint: #f5eaff;
+    --white: #ffffff;
+    --dark: #2a2a2a;
+    --gray-bg: #3a3a3a;
+  }
+
+  body { font-family: 'Helvetica Neue', sans-serif; overflow: hidden; }
+
+  /* ─── SPLASH SCREEN ─── */
+  #splash {
+    position: absolute; inset: 0; z-index: 100;
+    display: flex; 
+    cursor: pointer;
+    overflow: visible;
+    background-image: url(Splash.png);
+  }
+
+  .splash-content {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    left: 0%;
+    top: 60%;
+    padding: 30px 40px;
+    align-items: left;
+  }
+
+  .w-entrar {
+    grid-area: entrar;
+    padding: 4px 4px 4px;
+    display: inline-block;
+    align-self: end;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-left: 0px;
+  }
+
+  /* ─── MAIN APP ─── */
+  #app {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    background: var(--white);
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* Faint background texture */
+  .app-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+  }
+  .app-bg svg {
+    position: absolute;
+    top: 0; right: 0;
+    width: 55%;
+    opacity: 0.25;
+  }
+
+  /* Header */
+  header {
+    position: relative; z-index: 10;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    padding: 20px 30px 0;
+    border-bottom: 2px solid var(--purple-nav);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .logo-icon {
+    width: 70px; height: 55px;
+  }
+  .logo-icon circle, .logo-icon path { fill: var(--purple-nav); }
+
+  .site-title {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 18px; font-weight: 700;
+    letter-spacing: 0.12em;
+    color: var(--purple);
+    text-transform: uppercase;
+  }
+
+  /* Nav */
+  nav {
+    position: relative; z-index: 10;
+    background: var(--purple-nav);
+    padding: 8px 30px;
+    display: flex;
+    gap: 60px;
+  }
+
+  nav button {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 13px; font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    background: none; border: none; cursor: pointer;
+    color: var(--white);
+    padding: 2px 0;
+    transition: color 0.15s;
+  }
+  nav button:hover { color: var(--purple); }
+  nav button.active { color: var(--purple); }
+
+  /* Alpha bar */
+  #alpha-bar {
+    position: relative; z-index: 10;
+    padding: 6px 30px;
+    display: none;
+    gap: 8px;
+    flex-wrap: wrap;
+    border-bottom: 1px solid var(--purple-light);
+  }
+
+  .alpha-letter {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 13px; font-weight: 400;
+    color: var(--dark);
+    background: none; border: none;
+    cursor: pointer;
+    padding: 0 2px;
+    transition: color 0.15s;
+  }
+  .alpha-letter:hover, .alpha-letter.active {
+    color: var(--purple);
+    font-weight: 700;
+  }
+
+  /* Content area */
+  main {
+    position: relative; z-index: 10;
+    flex: 1;
+    padding: 20px 30px;
+    overflow-y: auto;
+  }
+
+  #designer-list { display: none; }
+
+  .designer-name {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 14px; font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--purple);
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 1.5px solid var(--purple-light);
+    padding-bottom: 2px;
+    display: inline-block;
+  }
+  .designer-name:hover { color: var(--purple-light); }
+
+  /* Footer */
+  footer {
+    position: relative; z-index: 10;
+    background: var(--purple-nav);
+    padding: 6px 30px;
+    display: flex; gap: 20px;
+    align-items: center;
+  }
+  footer span {
+    font-family: 'Helvetica Neue', sans-serif;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--white);
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  footer span:hover { color: var(--purple); }
+  .footer-copy {
+    margin-left: auto;
+    font-weight: 400 !important;
+    cursor: default !important;
+    letter-spacing: 0.05em !important;
+  }
+  footer .footer-copy:hover { color: var(--white) !important; }
+
+  /* Transition */
+  .fade-out { animation: fadeOut 0.4s forwards; }
+  .fade-in  { animation: fadeIn  0.4s forwards; }
+  @keyframes fadeOut { to { opacity: 0; } }
+  @keyframes fadeIn  { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body>
+
+<!-- ─── SPLASH ─── -->
+<div id="splash">
+  <div class="splash-content">
+    <span class="splash-word w-entrar" id="entrar-btn"><img src="ENTRAR_.png"></img></span>
+  </div>
+</div>
+
+<!-- ─── APP ─── -->
+<div id="app" style="display:none; flex-direction:column; height:100vh; background:#fff; position:relative; overflow:hidden;">
+  <!-- faint bg illustration -->
+  <div class="app-bg">
+    <svg viewBox="0 0 600 700" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="600,0 200,0 500,350" fill="#e8d4f5" opacity="0.5"/>
+      <polygon points="600,200 350,400 600,600" fill="#f0e2f8" opacity="0.4"/>
+      <line x1="250" y1="0" x2="600" y2="400" stroke="#d4a8e8" stroke-width="1.5"/>
+      <line x1="350" y1="300" x2="600" y2="650" stroke="#d4a8e8" stroke-width="1"/>
+      <polygon points="400,500 580,420 600,700 420,700" fill="#e8d4f5" opacity="0.3"/>
+    </svg>
+  </div>
+
+  <header>
+    <div class="logo">
+      <a href="#" title="Página inicial">
+        <img src="LogoBarky.png">
+      </a>
+    </div>
+    <div class="site-title">Brazilian Arkyvo of Fashion</div>
+  </header>
+
+  <nav>
+    <button id="btn-articles" onclick="setSection('articles')">Articles</button>
+    <button id="btn-designers" onclick="setSection('designers')">Designers</button>
+    <button id="btn-arkyvo" onclick="setSection('arkyvo')">Arkyvo</button>
+  </nav>
+
+  <div id="alpha-bar"></div>
+
+  <main>
+    <div id="designer-list"></div>
+  </main>
+
+  <footer>
+    <span>Team</span>
+    <span>Contribute</span>
+    <span class="footer-copy">© Barky 2026 – Todos os Direitos Reservados</span>
+  </footer>
+</div>
+
+<script>
+  // Designers data keyed by letter
+  const DESIGNERS = {
+    F: [{ name: 'Fause Haten',            slug: 'fause-haten' }],
+    A: [{ name: 'Alexandre Herchcovitch', slug: 'alexandre-herchcovitch' }],
+    C: [{ name: 'Cleo Fante',             slug: 'cleo-fante' }],
+    D: [{ name: 'Dudu Bertholini',        slug: 'dudu-bertholini' }],
+    G: [{ name: 'Gloria Coelho',          slug: 'gloria-coelho' }],
+    H: [{ name: 'Helô Rocha',             slug: 'helo-rocha' }],
+    I: [{ name: 'Isabela Capeto',         slug: 'isabela-capeto' }],
+    J: [{ name: 'Jum Nakao',              slug: 'jum-nakao' }],
+    L: [{ name: 'Lino Villaventura',      slug: 'lino-villaventura' }],
+    M: [{ name: 'Marcia Ganem',           slug: 'marcia-ganem' }],
+    O: [{ name: 'Osklen',                 slug: 'osklen' }],
+    R: [{ name: 'Ricardo Almeida',        slug: 'ricardo-almeida' }],
+    S: [{ name: 'Sandro Barros',          slug: 'sandro-barros' }],
+    T: [{ name: 'Tais Grimaldi',          slug: 'tais-grimaldi' }],
+    V: [{ name: 'Valeria Vaz',            slug: 'valeria-vaz' }],
+    W: [{ name: 'Walter Rodrigues',       slug: 'walter-rodrigues' }],
+  };
+
+
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  let currentSection = null;
+  let currentLetter = null;
+
+  // Build alpha bar
+  const alphaBar = document.getElementById('alpha-bar');
+  ALPHABET.forEach(l => {
+    const btn = document.createElement('button');
+    btn.className = 'alpha-letter';
+    btn.textContent = l;
+    btn.id = 'al-' + l;
+    btn.onclick = () => selectLetter(l);
+    alphaBar.appendChild(btn);
+  });
+
+  function setSection(sec) {
+    // update nav active state
+    ['articles','designers','arkyvo'].forEach(s => {
+      document.getElementById('btn-' + s).classList.toggle('active', s === sec);
+    });
+
+    if (sec === 'designers') {
+      alphaBar.style.display = 'flex';
+      // reset letter
+      currentLetter = null;
+      ALPHABET.forEach(l => document.getElementById('al-' + l).classList.remove('active'));
+      document.getElementById('designer-list').style.display = 'none';
+      document.getElementById('designer-list').innerHTML = '';
+    } else {
+      alphaBar.style.display = 'none';
+      document.getElementById('designer-list').style.display = 'none';
+    }
+    currentSection = sec;
+  }
+
+  function selectLetter(letter) {
+    currentLetter = letter;
+    ALPHABET.forEach(l => {
+      document.getElementById('al-' + l).classList.toggle('active', l === letter);
+    });
+    const list = document.getElementById('designer-list');
+    const designers = DESIGNERS[letter] || [];
+    list.innerHTML = '';
+    if (designers.length) {
+      designers.forEach(({ name, slug }) => {
+        const el = document.createElement('div');
+        el.style.marginBottom = '12px';
+        el.innerHTML = `<a class="designer-name" href="designers/${slug}/${slug}.html">${name}</a>`;
+        list.appendChild(el);
+      });
+      list.style.display = 'block';
+    } else {
+      list.style.display = 'none';
+    }
+  }
+
+
+/*
+  function selectLetter(letter) {
+    currentLetter = letter;
+    ALPHABET.forEach(l => {
+      document.getElementById('al-' + l).classList.toggle('active', l === letter);
+    });
+    const list = document.getElementById('designer-list');
+    const designers = DESIGNERS[letter] || [];
+    list.innerHTML = '';
+    if (designers.length) {
+      designers.forEach(name => {
+        const el = document.createElement('div');
+        el.style.marginBottom = '12px';
+        el.innerHTML = `<span class="designer-name">${name}</span>`;
+        list.appendChild(el);
+      });
+      list.style.display = 'block';
+    } else {
+      list.style.display = 'none';
+    }
+  }
+*/
+
+  // Splash → App
+  document.getElementById('entrar-btn').addEventListener('click', enterSite);
+  document.getElementById('splash').addEventListener('click', function(e) {
+    if (e.target === this) enterSite();
+  });
+
+  function enterSite() {
+    const splash = document.getElementById('splash');
+    const app = document.getElementById('app');
+    splash.classList.add('fade-out');
+    setTimeout(() => {
+      splash.style.display = 'none';
+      app.style.display = 'flex';
+      app.classList.add('fade-in');
+      document.body.style.overflow = 'auto';
+    }, 380);
+  }
+</script>
+</body>
+</html>
