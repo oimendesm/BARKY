@@ -93,12 +93,15 @@
   }
 
   .logo {
-    display: flex; align-items: center; gap: 8px;
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    transition: transform 0.5s ease-in-out; 
   }
-  .logo-icon {
-    width: 70px; height: 55px;
+
+  .logo:hover{
+    transform:rotate(15deg);
   }
-  .logo-icon circle, .logo-icon path { fill: var(--purple-nav); }
 
   .site-title {
     font-family: 'Helvetica Neue', sans-serif;

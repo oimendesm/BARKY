@@ -46,6 +46,17 @@
     gap: 10px;
   }
 
+  .logo {
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    transition: transform 0.5s ease-in-out; 
+  }
+
+  .logo:hover{
+    transform:rotate(15deg);
+  }
+
   .main-grid {
     display: grid;
     grid-template-columns: 42% 1fr;
@@ -450,9 +461,11 @@
 <body>
 
 <header>
-  <a href="../../index.html" title="Página inicial">
-    <img src="../../LogoBarky.png">
-  </a>
+  <div class="logo">
+    <a href="../../index.html" title="Página inicial">
+      <img src="../../LogoBarky.png">
+    </a>
+  </div>
 </header>
 
 <div class="main-grid">
