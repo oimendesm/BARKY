@@ -18,17 +18,19 @@
     }
 
     --violet: #7e6eac;
-    --violet-light: #d4a8e8;
+    --violet-light: #a958cd;
     --violet-pale: #f5eaff;
     --violet-dark: #a958cd;
-    --ink: #2a2a2a;
-    --paper: #ffffff;
+    --yellow: #ffda29;
+    --teal: #33becc;
+    --dark: #2d2c2f;
+    --white: #ffffff;
   }
 
   body {
     font-family: 'Helvetica Neue', Arial, sans-serif;
-    background: var(--paper);
-    color: var(--ink);
+    background: var(--white);
+    color: var(--dark);
     min-height: 100vh;
   }
 
@@ -376,7 +378,7 @@
     justify-content: space-between;
     padding: 6px 10px;
     border-top: 1.5px solid var(--violet-light);
-    background: var(--paper);
+    background: var(--white);
     font-size: 11px;
     color: var(--violet);
   }
@@ -586,7 +588,7 @@
   };
 
   // ── State ──────────────────────────────────────────────────────
-  let currentKey     = 'desfile';
+  let currentKey     = 'polaroid';
   let pdfOpen        = false;
   let pdfDoc         = null;   // loaded PDFDocumentProxy
   let currentSpread  = 1;      // left page of current spread (always odd)
@@ -774,7 +776,7 @@
 
   // ── Init ──────────────────────────────────────────────────────
   (async () => {
-    await renderCover('desfile');
+    await renderCover('polaroid');
   })();
 </script>
 </body>
